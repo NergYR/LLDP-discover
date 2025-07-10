@@ -3,12 +3,17 @@
 # Netmiko pour la connexion SSH aux équipements réseau
 netmiko>=4.3.0
 
+# Ansible version compatible avec les collections modernes
+ansible>=6.0.0,<8.0.0
+ansible-core>=2.13.0,<2.16.0
+
 # Modules pour le parsing et les expressions régulières (inclus dans Python standard)
 # re, json, datetime, logging
 
-# Dépendances additionnelles optionnelles
+# Dépendances additionnelles
 paramiko>=3.4.0  # Backend SSH pour netmiko
 cryptography>=41.0.0  # Cryptographie pour SSH
+PyYAML>=6.0  # Parser YAML pour Ansible
 
 # Pour les tests
 pytest>=7.4.0

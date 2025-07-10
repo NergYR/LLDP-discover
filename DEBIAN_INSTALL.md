@@ -101,6 +101,47 @@ python3 python/test_connectivity.py
 | `transfer_to_debian.sh` | Transfert depuis Windows |
 | `cleanup_lldp.sh` | Nettoyage des fichiers temporaires |
 
+### 📡 Approches Ansible disponibles
+
+En cas de problèmes avec les modules réseau Ansible, deux approches sont disponibles :
+
+1. **Approche standard (recommandée)** : Utilise les modules réseau Ansible
+   ```bash
+   ./run_discovery.sh ansible -i ansible/inventory.ini
+   ```
+
+2. **Approche SSH directe (alternative)** : Utilise SSH direct si les modules réseau ne fonctionnent pas
+   ```bash
+   ./run_discovery.sh ansible -i ansible/inventory_ssh.ini
+   cd ansible && ansible-playbook -i inventory_ssh.ini lldp_discovery_ssh.yml -vv
+   ```
+
+### 🔧 Résolution des problèmes Ansible
+
+Si vous obtenez des erreurs comme "network os arubaoss is not supported" :
+
+1. **Vérifier la version d'Ansible :**
+   ```bash
+   ansible --version
+   # Doit être >= 6.0.0
+   ```
+
+2. **Réinstaller Ansible si nécessaire :**
+   ```bash
+   pip uninstall ansible ansible-core
+   pip install "ansible>=6.0.0,<8.0.0"
+   ```
+
+3. **Utiliser l'approche SSH directe :**
+   ```bash
+   # Installer sshpass si pas déjà fait
+   sudo apt install sshpass
+   
+   # Lancer avec l'inventaire SSH
+   cd ansible
+   ansible-playbook -i inventory_ssh.ini lldp_discovery_ssh.yml -vv
+   ```
+
 ## ⚡ Utilisation rapide
 
 ### Avec les alias configurés
@@ -199,6 +240,24 @@ ansible-playbook -i ansible/inventory.ini ansible/lldp_discovery.yml --ask-vault
    # Vérifier connectivité
    ping 192.168.1.10
    telnet 192.168.1.10 22
+   ```
+
+5. **Erreur "network os arubaoss is not supported"**
+   ```bash
+   # Corriger automatiquement
+   ./fix_ansible.sh
+   
+   # Ou manuellement
+   pip uninstall ansible ansible-core
+   pip install "ansible>=6.0.0,<8.0.0"
+   ansible-galaxy collection install arubanetworks.aos_switch --force
+   ```
+
+6. **Collection ansible.netcommon ne supporte pas Ansible version X.X.X**
+   ```bash
+   # Utiliser l'approche SSH directe
+   cd ansible
+   ansible-playbook -i inventory_ssh.ini lldp_discovery_ssh.yml -vv
    ```
 
 ### Logs de debug

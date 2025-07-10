@@ -1,0 +1,112 @@
+---
+- name: Découverte LLDP sur switches Aruba - Version SSH directe
+  hosts: aruba_switches
+  gather_facts: no
+  vars:
+    output_directory: "../output"
+    timestamp: "{{ ansible_date_time.epoch }}"
+  
+  tasks:
+    - name: Créer le répertoire de sortie
+      file:
+        path: "{{ output_directory }}"
+        state: directory
+      delegate_to: localhost
+      run_once: true
+
+    - name: Test de connectivité SSH
+      ansible.builtin.ping:
+      register: ping_result
+
+    - name: Récupérer les informations LLDP neighbors via SSH
+      ansible.builtin.shell: |
+        sshpass -p "{{ ansible_password }}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {{ ansible_user }}@{{ ansible_host }} "show lldp neighbors detail"
+      delegate_to: localhost
+      register: lldp_neighbors
+      when: ping_result is succeeded
+
+    - name: Récupérer la table ARP via SSH
+      ansible.builtin.shell: |
+        sshpass -p "{{ ansible_password }}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {{ ansible_user }}@{{ ansible_host }} "show arp"
+      delegate_to: localhost
+      register: arp_table
+      when: ping_result is succeeded
+
+    - name: Récupérer les informations système via SSH
+      ansible.builtin.shell: |
+        sshpass -p "{{ ansible_password }}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {{ ansible_user }}@{{ ansible_host }} "show system"
+      delegate_to: localhost
+      register: system_info
+      when: ping_result is succeeded
+
+    - name: Parser les données LLDP
+      set_fact:
+        parsed_lldp: "{{ lldp_neighbors.stdout | parse_lldp_neighbors }}"
+        parsed_arp: "{{ arp_table.stdout | parse_arp_table }}"
+        switch_info: "{{ system_info.stdout | parse_system_info }}"
+      when: lldp_neighbors is succeeded and arp_table is succeeded
+
+    - name: Enrichir les données avec les informations ARP
+      set_fact:
+        enriched_neighbors: "{{ parsed_lldp | enrich_with_arp(parsed_arp) }}"
+      when: parsed_lldp is defined and parsed_arp is defined
+
+    - name: Préparer les données de sortie
+      set_fact:
+        switch_data:
+          switch_ip: "{{ ansible_host }}"
+          switch_hostname: "{{ inventory_hostname }}"
+          timestamp: "{{ ansible_date_time.iso8601 }}"
+          neighbors_count: "{{ enriched_neighbors | default([]) | length }}"
+          neighbors: "{{ enriched_neighbors | default([]) }}"
+          connection_status: "{{ 'success' if ping_result is succeeded else 'failed' }}"
+          error_message: "{{ ping_result.msg | default('') if ping_result is failed else '' }}"
+
+    - name: Sauvegarder les résultats par switch
+      copy:
+        content: "{{ switch_data | to_nice_json }}"
+        dest: "{{ output_directory }}/{{ inventory_hostname }}_lldp_discovery.json"
+      delegate_to: localhost
+
+    - name: Debug - Afficher les informations du switch
+      debug:
+        msg: |
+          Switch: {{ inventory_hostname }} ({{ ansible_host }})
+          Status: {{ switch_data.connection_status }}
+          Neighbors: {{ switch_data.neighbors_count }}
+
+- name: Consolider les résultats
+  hosts: localhost
+  gather_facts: yes
+  run_once: true
+  tasks:
+    - name: Collecter tous les résultats
+      set_fact:
+        all_results: "{{ all_results | default([]) + [hostvars[item].switch_data] }}"
+      loop: "{{ groups['aruba_switches'] }}"
+      when: hostvars[item].switch_data is defined
+
+    - name: Créer le rapport consolidé
+      set_fact:
+        consolidated_report:
+          discovery_timestamp: "{{ ansible_date_time.iso8601 }}"
+          total_switches: "{{ groups['aruba_switches'] | length }}"
+          successful_connections: "{{ all_results | selectattr('connection_status', 'equalto', 'success') | list | length }}"
+          total_neighbors: "{{ all_results | map(attribute='neighbors_count') | map('int') | sum }}"
+          switches: "{{ all_results | items2dict(key_name='switch_hostname', value_name='data') }}"
+
+    - name: Sauvegarder le rapport consolidé
+      copy:
+        content: "{{ consolidated_report | to_nice_json }}"
+        dest: "{{ output_directory }}/consolidated_lldp_discovery_ssh.json"
+
+    - name: Afficher le résumé
+      debug:
+        msg: |
+          ==========================================
+          Découverte LLDP terminée (méthode SSH)
+          ==========================================
+          Switches traités: {{ consolidated_report.total_switches }}
+          Connexions réussies: {{ consolidated_report.successful_connections }}
+          Total voisins: {{ consolidated_report.total_neighbors }}
+          ==========================================

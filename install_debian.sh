@@ -58,6 +58,7 @@ sudo apt install -y \
     wget \
     jq \
     ssh \
+    sshpass \
     nmap \
     build-essential \
     libssl-dev \
@@ -105,7 +106,8 @@ if [ -f "requirements.txt" ]; then
     print_success "Dépendances Python installées"
 else
     print_warning "Fichier requirements.txt non trouvé, installation manuelle..."
-    pip install netmiko paramiko ansible pyaml
+    # Installation d'une version compatible d'Ansible
+    pip install "ansible>=6.0.0,<8.0.0" netmiko paramiko PyYAML
 fi
 
 # Installer les collections Ansible si le répertoire ansible existe
