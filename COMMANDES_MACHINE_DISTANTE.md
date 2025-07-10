@@ -279,7 +279,7 @@ crontab -e
 
 ## 🆘 Numéros d'urgence (codes d'erreur)
 
-### Erreur "ansible_date_time is undefined"
+### Erreur "No fact modules available" ou "network OS arubaoss"
 ```bash
 # Solution automatique (recommandée)
 chmod +x fix_ansible_facts.sh
@@ -288,8 +288,14 @@ chmod +x fix_ansible_facts.sh
 # Puis retenter
 cd ansible && ansible-playbook -i inventory.ini lldp_discovery.yml --check
 
-# Si ça ne marche toujours pas, utiliser l'approche SSH :
+# Si ça ne marche toujours pas, utiliser l'approche SSH directe
 cd ansible && ansible-playbook -i inventory_ssh.ini lldp_discovery_ssh.yml -vv
+```
+
+### Erreur "ansible_date_time is undefined"
+```bash
+# Même solution que ci-dessus
+./fix_ansible_facts.sh
 ```
 
 ### Erreur "externally-managed-environment"

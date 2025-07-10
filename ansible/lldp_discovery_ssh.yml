@@ -1,11 +1,17 @@
 ---
 - name: Découverte LLDP sur switches Aruba - Version SSH directe
   hosts: aruba_switches
-  gather_facts: yes
+  gather_facts: no
   vars:
     output_directory: "../output"
   
   tasks:
+    - name: Obtenir le timestamp
+      set_fact:
+        current_timestamp: "{{ ansible_date_time.iso8601 }}"
+      delegate_to: localhost
+      run_once: true
+
     - name: Créer le répertoire de sortie
       file:
         path: "{{ output_directory }}"
@@ -55,7 +61,7 @@
         switch_data:
           switch_ip: "{{ ansible_host }}"
           switch_hostname: "{{ inventory_hostname }}"
-          timestamp: "{{ ansible_date_time.iso8601 }}"
+          timestamp: "{{ hostvars['localhost']['current_timestamp'] }}"
           neighbors_count: "{{ enriched_neighbors | default([]) | length }}"
           neighbors: "{{ enriched_neighbors | default([]) }}"
           connection_status: "{{ 'success' if ping_result is succeeded else 'failed' }}"

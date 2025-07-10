@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Script de correction pour le problème ansible_date_time undefined
+# Script de correction pour les problèmes Ansible avec les équipements réseau
 # Auteur: Assistant IA pour découverte LLDP Aruba
 # Usage: ./fix_ansible_facts.sh
 
 set -e
 
-echo "🔧 Correction du problème ansible_date_time..."
+echo "🔧 Correction des problèmes Ansible pour équipements réseau..."
 
 # Couleurs pour l'affichage
 RED='\033[0;31m'
@@ -48,17 +48,29 @@ fix_playbook() {
     
     log "Correction de $description..."
     
-    # Vérifier si gather_facts est déjà à yes
-    if grep -q "gather_facts: yes" "$playbook"; then
-        log "✅ $description déjà corrigé"
-        return
+    # Pour les équipements réseau, désactiver gather_facts sur les hosts réseau
+    if grep -q "hosts: aruba_switches" "$playbook"; then
+        sed -i '/hosts: aruba_switches/,/tasks:/ s/gather_facts: yes/gather_facts: no/g' "$playbook"
+        log "✅ gather_facts désactivé pour les équipements réseau dans $description"
     fi
     
-    # Corriger gather_facts
-    sed -i 's/gather_facts: no/gather_facts: yes/g' "$playbook"
+    # S'assurer que gather_facts est activé seulement pour localhost
+    if grep -q "hosts: localhost" "$playbook"; then
+        sed -i '/hosts: localhost/,/tasks:/ s/gather_facts: no/gather_facts: yes/g' "$playbook"
+        log "✅ gather_facts activé pour localhost dans $description"
+    fi
     
-    # Supprimer la ligne timestamp: si elle existe dans vars
-    sed -i '/^[[:space:]]*timestamp: "{{ ansible_date_time/d' "$playbook"
+    # Ajouter la tâche timestamp si elle n'existe pas
+    if ! grep -q "name: Obtenir le timestamp" "$playbook"; then
+        # Trouver la ligne des tasks et ajouter la tâche timestamp
+        if grep -q "tasks:" "$playbook"; then
+            sed -i '/tasks:/a\\n    - name: Obtenir le timestamp\n      set_fact:\n        current_timestamp: "{{ ansible_date_time.iso8601 }}"\n      delegate_to: localhost\n      run_once: true' "$playbook"
+            log "✅ Tâche timestamp ajoutée dans $description"
+        fi
+    fi
+    
+    # Remplacer les références directes à ansible_date_time par hostvars
+    sed -i 's/"{{ ansible_date_time.iso8601 }}"/"{{ hostvars['\''localhost'\'']['\''current_timestamp'\''] }}"/g' "$playbook"
     
     log "✅ $description corrigé"
 }
