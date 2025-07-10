@@ -116,7 +116,7 @@ if [ -d "ansible" ]; then
         ansible-galaxy collection install -r requirements.yml
     else
         # Installation manuelle des collections essentielles
-        ansible-galaxy collection install arubanetworks.arubaoss
+        ansible-galaxy collection install arubanetworks.aos_switch
         ansible-galaxy collection install community.general
     fi
     cd ..

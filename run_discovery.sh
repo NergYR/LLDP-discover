@@ -26,11 +26,12 @@ print_error() {
 
 # Fonction d'aide
 show_help() {
-    echo "Usage: $0 [python|ansible] [options]"
+    echo "Usage: $0 [python|ansible|test] [options]"
     echo ""
     echo "Modes disponibles:"
     echo "  python    - Utilise le script Python pour la découverte LLDP"
     echo "  ansible   - Utilise le playbook Ansible pour la découverte LLDP"
+    echo "  test      - Test de connectivité Ansible (rapide)"
     echo ""
     echo "Options Python:"
     echo "  -c CONFIG_FILE    - Fichier de configuration (défaut: python/switches_config.json)"
@@ -42,6 +43,7 @@ show_help() {
     echo "  -v, -vv, -vvv     - Niveaux de verbosité"
     echo ""
     echo "Exemples:"
+    echo "  $0 test                                    # Test rapide de connectivité"
     echo "  $0 python -v"
     echo "  $0 ansible -vv"
     echo "  $0 python -c custom_config.json -o custom_output.json"
@@ -103,7 +105,63 @@ run_python() {
     eval $cmd
 }
 
-# Fonction pour exécuter Ansible
+# Fonction pour tester Ansible
+test_ansible() {
+    print_status "Test de connectivité Ansible vers les switches Aruba..."
+    
+    # Vérifier que les fichiers Ansible existent
+    if [ ! -f "ansible/test_connectivity.yml" ]; then
+        print_error "Playbook de test ansible/test_connectivity.yml non trouvé"
+        exit 1
+    fi
+    
+    if [ ! -f "ansible/inventory.ini" ]; then
+        print_error "Inventaire ansible/inventory.ini non trouvé"
+        exit 1
+    fi
+    
+    # Aller dans le répertoire ansible
+    cd ansible
+    
+    # Construire la commande
+    cmd="ansible-playbook test_connectivity.yml"
+    inventory="inventory.ini"
+    
+    # Traiter les arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -i|--inventory)
+                inventory="$2"
+                shift 2
+                ;;
+            -v)
+                cmd="$cmd -v"
+                shift
+                ;;
+            -vv)
+                cmd="$cmd -vv"
+                shift
+                ;;
+            -vvv)
+                cmd="$cmd -vvv"
+                shift
+                ;;
+            *)
+                print_error "Option inconnue: $1"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+    
+    cmd="$cmd -i $inventory"
+    
+    print_status "Exécution: $cmd"
+    eval $cmd
+    
+    # Retourner au répertoire racine
+    cd ..
+}
 run_ansible() {
     print_status "Démarrage de la découverte LLDP avec Ansible..."
     
@@ -185,6 +243,9 @@ main() {
             ;;
         ansible)
             run_ansible "$@"
+            ;;
+        test)
+            test_ansible "$@"
             ;;
         -h|--help|help)
             show_help

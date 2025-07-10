@@ -1,0 +1,60 @@
+---
+- name: Test de connectivité Ansible vers switches Aruba OS
+  hosts: aruba_switches
+  gather_facts: no
+  vars:
+    ansible_command_timeout: 30
+  
+  tasks:
+    - name: Test de base - Récupérer la version système
+      arubanetworks.aos_switch.arubaoss_command:
+        commands:
+          - show version
+      register: version_output
+      
+    - name: Afficher la version
+      debug:
+        msg: "Switch {{ inventory_hostname }}: {{ version_output.stdout[0] | regex_search('Software revision\\s+([\\w\\.]+)', '\\1') | first }}"
+      when: version_output.stdout is defined
+
+    - name: Test LLDP - Vérifier si LLDP est activé
+      arubanetworks.aos_switch.arubaoss_command:
+        commands:
+          - show lldp configuration
+      register: lldp_config
+      
+    - name: Afficher l'état LLDP
+      debug:
+        msg: "LLDP Status sur {{ inventory_hostname }}: {{ 'Enabled' if 'Enabled' in lldp_config.stdout[0] else 'Disabled' }}"
+      when: lldp_config.stdout is defined
+
+    - name: Test rapide - Nombre de voisins LLDP
+      arubanetworks.aos_switch.arubaoss_command:
+        commands:
+          - show lldp neighbors
+      register: lldp_neighbors
+      
+    - name: Compter les voisins LLDP
+      set_fact:
+        neighbor_count: "{{ lldp_neighbors.stdout[0].split('\\n') | select('match', '^\\s*\\S+\\s+\\S+') | list | length - 1 }}"
+      when: lldp_neighbors.stdout is defined
+
+    - name: Afficher le nombre de voisins
+      debug:
+        msg: "{{ inventory_hostname }} a {{ neighbor_count | default(0) }} voisins LLDP détectés"
+
+- name: Résumé des tests
+  hosts: localhost
+  gather_facts: no
+  run_once: true
+  tasks:
+    - name: Afficher le résumé
+      debug:
+        msg: |
+          ========================================
+          Test de connectivité Ansible terminé
+          ========================================
+          Switches testés: {{ groups['aruba_switches'] | length }}
+          
+          Prochaine étape: Lancer la découverte complète
+          ./run_discovery.sh ansible -vv
