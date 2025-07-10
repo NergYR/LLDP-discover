@@ -1,0 +1,20 @@
+{
+  "switches": [
+    {
+      "host": "192.168.1.10",
+      "username": "admin",
+      "password": "your_password_here",
+      "device_type": "aruba_os",
+      "model": "2530",
+      "description": "Aruba 2530 Switch - Building A"
+    },
+    {
+      "host": "192.168.1.11",
+      "username": "admin",
+      "password": "your_password_here", 
+      "device_type": "aruba_os",
+      "model": "6100",
+      "description": "Aruba 6100 Switch - Building B"
+    }
+  ]
+}

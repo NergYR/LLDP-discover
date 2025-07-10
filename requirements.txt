@@ -1,0 +1,20 @@
+# Dépendances Python pour la découverte LLDP Aruba
+
+# Netmiko pour la connexion SSH aux équipements réseau
+netmiko>=4.3.0
+
+# Modules pour le parsing et les expressions régulières (inclus dans Python standard)
+# re, json, datetime, logging
+
+# Dépendances additionnelles optionnelles
+paramiko>=3.4.0  # Backend SSH pour netmiko
+cryptography>=41.0.0  # Cryptographie pour SSH
+
+# Pour les tests
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Pour le développement
+black>=23.0.0  # Formatage du code
+flake8>=6.0.0  # Linting
+mypy>=1.5.0   # Type checking
