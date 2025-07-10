@@ -2,6 +2,50 @@
 
 Ce guide vous accompagne pour transférer et installer le projet LLDP Discovery sur un serveur Debian 12.
 
+## 🚑 Dépannage rapide
+
+Si vous rencontrez des erreurs d'installation ou de configuration, utilisez ces solutions rapides :
+
+### Problème d'environnement virtuel ou Ansible
+
+```bash
+# Solution universelle - recrée tout proprement
+chmod +x quick_fix.sh
+./quick_fix.sh
+
+# Puis activer l'environnement pour les futures sessions
+./activate_env.sh
+```
+
+### Test rapide de fonctionnement
+
+```bash
+# Après réparation, tester immédiatement
+./run_discovery.sh test
+
+# Si ça ne marche pas, utiliser l'approche SSH directe
+cd ansible
+ansible-playbook -i inventory_ssh.ini lldp_discovery_ssh.yml --check
+```
+
+### Commandes de diagnostic
+
+```bash
+# Vérifier l'environnement
+echo $VIRTUAL_ENV
+python3 --version
+ansible --version
+
+# Vérifier les modules
+pip list | grep -E "(ansible|netmiko|paramiko)"
+
+# Tester la connectivité basique
+ping 192.168.1.10
+ssh -o ConnectTimeout=5 admin@192.168.1.10 exit
+```
+
+---
+
 ## 📋 Méthodes de transfert
 
 ### Méthode 1 : Script automatique (Recommandé)
@@ -100,6 +144,9 @@ python3 python/test_connectivity.py
 | `run_discovery.sh` | Lancement rapide de la découverte |
 | `transfer_to_debian.sh` | Transfert depuis Windows |
 | `cleanup_lldp.sh` | Nettoyage des fichiers temporaires |
+| `quick_fix.sh` | Réparation rapide environnement/Ansible |
+| `fix_ansible.sh` | Correction spécifique Ansible |
+| `activate_env.sh` | Activation rapide environnement |
 
 ### 📡 Approches Ansible disponibles
 
@@ -244,16 +291,29 @@ ansible-playbook -i ansible/inventory.ini ansible/lldp_discovery.yml --ask-vault
 
 5. **Erreur "network os arubaoss is not supported"**
    ```bash
-   # Corriger automatiquement
+   # Solution rapide (recommandée)
+   ./quick_fix.sh
+   
+   # Ou correction automatique
    ./fix_ansible.sh
    
    # Ou manuellement
+   source lldp-env/bin/activate
    pip uninstall ansible ansible-core
    pip install "ansible>=6.0.0,<8.0.0"
    ansible-galaxy collection install arubanetworks.aos_switch --force
    ```
 
-6. **Collection ansible.netcommon ne supporte pas Ansible version X.X.X**
+6. **Erreur "externally-managed-environment"**
+   ```bash
+   # Solution: utiliser l'environnement virtuel
+   ./quick_fix.sh
+   
+   # Ou activer manuellement l'environnement
+   source lldp-env/bin/activate
+   ```
+
+7. **Collection ansible.netcommon ne supporte pas Ansible version X.X.X**
    ```bash
    # Utiliser l'approche SSH directe
    cd ansible

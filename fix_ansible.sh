@@ -31,10 +31,37 @@ print_error() {
 echo "🔧 Vérification et correction de l'installation Ansible"
 echo "======================================================"
 
+# Diagnostic initial
+print_status "Diagnostic de l'environnement..."
+print_status "Répertoire actuel: $(pwd)"
+print_status "Version Python: $(python3 --version)"
+print_status "Utilisateur: $(whoami)"
+
+# Vérifier si nous sommes dans le bon répertoire
+if [ ! -f "requirements.txt" ] || [ ! -d "ansible" ]; then
+    print_error "Vous n'êtes pas dans le répertoire du projet LLDP-discover"
+    print_status "Veuillez naviguer vers le répertoire du projet et relancer ce script"
+    exit 1
+fi
+
 # Activer l'environnement virtuel si disponible
 if [ -d "lldp-env" ]; then
     source lldp-env/bin/activate
     print_status "Environnement virtuel activé"
+    
+    # Vérifier que l'environnement est bien activé
+    if [[ "$VIRTUAL_ENV" != "" ]]; then
+        print_success "Environnement virtuel confirmé: $VIRTUAL_ENV"
+    else
+        print_error "Impossible d'activer l'environnement virtuel"
+        exit 1
+    fi
+else
+    print_error "Environnement virtuel 'lldp-env' non trouvé"
+    print_status "Création de l'environnement virtuel..."
+    python3 -m venv lldp-env
+    source lldp-env/bin/activate
+    print_success "Environnement virtuel créé et activé"
 fi
 
 # Vérifier la version d'Ansible
@@ -51,6 +78,14 @@ if command -v ansible &> /dev/null; then
         print_warning "Version Ansible incompatible détectée: $ANSIBLE_VERSION"
         print_status "Mise à jour d'Ansible vers une version compatible..."
         
+        # Vérifier que nous sommes dans un environnement virtuel
+        if [[ "$VIRTUAL_ENV" == "" ]]; then
+            print_error "Impossible de mettre à jour Ansible sans environnement virtuel"
+            print_status "Veuillez d'abord activer l'environnement virtuel:"
+            print_status "source lldp-env/bin/activate"
+            exit 1
+        fi
+        
         # Désinstaller l'ancienne version
         pip uninstall -y ansible ansible-core || true
         
@@ -64,6 +99,15 @@ if command -v ansible &> /dev/null; then
     fi
 else
     print_warning "Ansible non installé, installation en cours..."
+    
+    # Vérifier que nous sommes dans un environnement virtuel
+    if [[ "$VIRTUAL_ENV" == "" ]]; then
+        print_error "Impossible d'installer Ansible sans environnement virtuel"
+        print_status "Veuillez d'abord activer l'environnement virtuel:"
+        print_status "source lldp-env/bin/activate"
+        exit 1
+    fi
+    
     pip install "ansible>=6.0.0,<8.0.0"
     print_success "Ansible installé"
 fi
