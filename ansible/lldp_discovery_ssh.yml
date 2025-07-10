@@ -1,10 +1,9 @@
 ---
 - name: Découverte LLDP sur switches Aruba - Version SSH directe
   hosts: aruba_switches
-  gather_facts: no
+  gather_facts: yes
   vars:
     output_directory: "../output"
-    timestamp: "{{ ansible_date_time.epoch }}"
   
   tasks:
     - name: Créer le répertoire de sortie

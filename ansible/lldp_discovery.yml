@@ -1,10 +1,9 @@
 ---
 - name: Découverte LLDP sur switches Aruba 2530 et 6100
   hosts: aruba_switches
-  gather_facts: no
+  gather_facts: yes
   vars:
     output_directory: "../output"
-    timestamp: "{{ ansible_date_time.iso8601 }}"
   
   tasks:
     - name: Créer le répertoire de sortie
@@ -47,7 +46,7 @@
         switch_data:
           switch_ip: "{{ inventory_hostname }}"
           switch_model: "{{ switch_info.model | default('Unknown') }}"
-          timestamp: "{{ timestamp }}"
+          timestamp: "{{ ansible_date_time.iso8601 }}"
           neighbors_count: "{{ enriched_neighbors | length }}"
           neighbors: "{{ enriched_neighbors }}"
 
