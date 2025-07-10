@@ -118,6 +118,15 @@ fix_playbook_simple() {
     # Supprimer les tâches timestamp problématiques
     sed -i '/name: Obtenir le timestamp/,/run_once: true/d' "$playbook"
     
+    # Ajouter output_directory dans la section localhost si manquant
+    if grep -q "hosts: localhost" "$playbook" && ! grep -A5 "hosts: localhost" "$playbook" | grep -q "output_directory:"; then
+        sed -i '/hosts: localhost/,/tasks:/ {
+            /gather_facts: yes/a\
+  vars:\
+    output_directory: "../output"
+        }' "$playbook"
+    fi
+    
     # Utiliser lookup pipe pour le timestamp (plus fiable)
     sed -i 's/"{{ hostvars\[.*current_timestamp.*\] }}"/"{{ lookup('\''pipe'\'', '\''date -Iseconds'\'') }}"/g' "$playbook"
     sed -i 's/"{{ current_timestamp }}"/"{{ lookup('\''pipe'\'', '\''date -Iseconds'\'') }}"/g' "$playbook"

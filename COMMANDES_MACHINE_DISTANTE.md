@@ -285,6 +285,15 @@ crontab -e
 
 ## 🆘 Numéros d'urgence (codes d'erreur)
 
+### Erreur "output_directory is undefined"
+```bash
+# Cette erreur est résolue automatiquement par le script
+./fix_ansible_simple.sh
+
+# Le script ajoute automatiquement la variable manquante
+# dans la section localhost des playbooks
+```
+
 ### Erreur "No fact modules available" ou "ansible_date_time is undefined"
 ```bash
 # Solution automatique NOUVELLE VERSION (recommandée)

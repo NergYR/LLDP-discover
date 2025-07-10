@@ -64,6 +64,8 @@
   hosts: localhost
   gather_facts: yes
   run_once: true
+  vars:
+    output_directory: "../output"
   tasks:
     - name: Créer le rapport consolidé
       set_fact:
