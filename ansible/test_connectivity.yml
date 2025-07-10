@@ -12,9 +12,19 @@
           - show version
       register: version_output
       
+    - name: Extraire la version logicielle
+      set_fact:
+        version_match: "{{ version_output.stdout[0] | regex_search('Software revision\\s+([\\w\\.]+)', '\\1') }}"
+      when: version_output.stdout is defined
+
+    - name: Définir la version logicielle
+      set_fact:
+        software_version: "{{ version_match[0] if version_match and version_match|length > 0 else 'Version inconnue' }}"
+      when: version_output.stdout is defined
+
     - name: Afficher la version
       debug:
-        msg: "Switch {{ inventory_hostname }}: {{ version_output.stdout[0] | regex_search('Software revision\\s+([\\w\\.]+)', '\\1') | first }}"
+        msg: "Switch {{ inventory_hostname }}: {{ software_version | default('Version non détectée') }}"
       when: version_output.stdout is defined
 
     - name: Test LLDP - Vérifier si LLDP est activé

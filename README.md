@@ -357,6 +357,24 @@ sudo apt install jq -y
    - Vérifier que LLDP est activé sur les switches
    - Confirmer que les équipements supportent LLDP
 
+4. **Erreur Ansible "'NoneType' object is not iterable" :**
+   - Cette erreur a été corrigée dans test_connectivity.yml
+   - Mise à jour automatique du parsing des versions logicielles
+   - Si l'erreur persiste, relancez : `./test_fix.sh`
+
+### Scripts de dépannage rapide
+
+```bash
+# Test et correction automatique
+./test_fix.sh
+
+# Réparation complète de l'environnement
+./quick_fix.sh
+
+# Correction spécifique Ansible
+./fix_ansible.sh
+```
+
 ### Commandes de diagnostic
 
 ```bash
