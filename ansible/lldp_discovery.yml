@@ -6,12 +6,6 @@
     output_directory: "../output"
   
   tasks:
-    - name: Obtenir le timestamp
-      set_fact:
-        current_timestamp: "{{ ansible_date_time.iso8601 }}"
-      delegate_to: localhost
-      run_once: true
-
     - name: Créer le répertoire de sortie
       file:
         path: "{{ output_directory }}"
@@ -52,7 +46,7 @@
         switch_data:
           switch_ip: "{{ inventory_hostname }}"
           switch_model: "{{ switch_info.model | default('Unknown') }}"
-          timestamp: "{{ hostvars['localhost']['current_timestamp'] }}"
+          timestamp: "{{ ansible_date_time.iso8601 | default(lookup('pipe', 'date -Iseconds')) }}"
           neighbors_count: "{{ enriched_neighbors | length }}"
           neighbors: "{{ enriched_neighbors }}"
 
@@ -74,7 +68,7 @@
     - name: Créer le rapport consolidé
       set_fact:
         consolidated_report:
-          discovery_timestamp: "{{ current_timestamp }}"
+          discovery_timestamp: "{{ ansible_date_time.iso8601 }}"
           switches: "{{ hostvars | dict2items | selectattr('value.all_switches_data', 'defined') | map(attribute='value.all_switches_data') | list | combine }}"
           summary:
             total_switches: "{{ groups['aruba_switches'] | length }}"

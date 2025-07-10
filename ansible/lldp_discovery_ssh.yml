@@ -6,12 +6,6 @@
     output_directory: "../output"
   
   tasks:
-    - name: Obtenir le timestamp
-      set_fact:
-        current_timestamp: "{{ ansible_date_time.iso8601 }}"
-      delegate_to: localhost
-      run_once: true
-
     - name: Créer le répertoire de sortie
       file:
         path: "{{ output_directory }}"
@@ -61,7 +55,7 @@
         switch_data:
           switch_ip: "{{ ansible_host }}"
           switch_hostname: "{{ inventory_hostname }}"
-          timestamp: "{{ hostvars['localhost']['current_timestamp'] }}"
+          timestamp: "{{ ansible_date_time.iso8601 | default(lookup('pipe', 'date -Iseconds')) }}"
           neighbors_count: "{{ enriched_neighbors | default([]) | length }}"
           neighbors: "{{ enriched_neighbors | default([]) }}"
           connection_status: "{{ 'success' if ping_result is succeeded else 'failed' }}"

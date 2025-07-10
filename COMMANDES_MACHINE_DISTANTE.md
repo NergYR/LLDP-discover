@@ -173,12 +173,18 @@ tail -f output/lldp_discovery.log
 
 ### Solution universelle (répare tout)
 ```bash
-# Script de réparation automatique
-chmod +x quick_fix.sh
-./quick_fix.sh
+# Script de réparation automatique NOUVELLE VERSION
+chmod +x fix_ansible_simple.sh
+./fix_ansible_simple.sh
 
 # Puis réactiver l'environnement
 ./activate_env.sh
+
+# Tester avec les playbooks simplifiés
+cd ansible
+ansible-playbook -i inventory.ini test_simple.yml -vv
+# OU
+ansible-playbook -i inventory_ssh.ini test_ssh_simple.yml -vv
 ```
 
 ### Problème spécifique Ansible
@@ -279,23 +285,25 @@ crontab -e
 
 ## 🆘 Numéros d'urgence (codes d'erreur)
 
-### Erreur "No fact modules available" ou "network OS arubaoss"
+### Erreur "No fact modules available" ou "ansible_date_time is undefined"
 ```bash
-# Solution automatique (recommandée)
-chmod +x fix_ansible_facts.sh
-./fix_ansible_facts.sh
+# Solution automatique NOUVELLE VERSION (recommandée)
+chmod +x fix_ansible_simple.sh
+./fix_ansible_simple.sh
 
-# Puis retenter
-cd ansible && ansible-playbook -i inventory.ini lldp_discovery.yml --check
+# Tests rapides disponibles après correction :
+cd ansible
 
-# Si ça ne marche toujours pas, utiliser l'approche SSH directe
-cd ansible && ansible-playbook -i inventory_ssh.ini lldp_discovery_ssh.yml -vv
-```
+# Test de connexion simple avec modules Aruba
+ansible-playbook -i inventory.ini test_simple.yml -vv
 
-### Erreur "ansible_date_time is undefined"
-```bash
-# Même solution que ci-dessus
-./fix_ansible_facts.sh
+# Test SSH directe (si modules ne marchent pas)
+ansible-playbook -i inventory_ssh.ini test_ssh_simple.yml -vv
+
+# Puis lancer la découverte complète
+ansible-playbook -i inventory.ini lldp_discovery.yml -vv
+# OU
+ansible-playbook -i inventory_ssh.ini lldp_discovery_ssh.yml -vv
 ```
 
 ### Erreur "externally-managed-environment"
