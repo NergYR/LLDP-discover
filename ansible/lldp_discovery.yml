@@ -14,19 +14,19 @@
       run_once: true
 
     - name: Récupérer les informations LLDP neighbors
-      arubanetworks.aos_switch:
+      arubanetworks.aos_switch.arubaoss_command:
         commands:
           - show lldp neighbors detail
       register: lldp_neighbors
 
     - name: Récupérer la table ARP
-      arubanetworks.aos_switch:
+      arubanetworks.aos_switch.arubaoss_command:
         commands:
           - show arp
       register: arp_table
 
     - name: Récupérer les informations système
-      arubanetworks.aos_switch:
+      arubanetworks.aos_switch.arubaoss_command:
         commands:
           - show system
       register: system_info
